@@ -48,40 +48,43 @@ public class ApplyTransforms : MonoBehaviour
         DoTransform();
     }
 
-    void DoTransform()
+void DoTransform()
+{
+    float translationTime = Time.time;
+    float rotationTime = Time.time;
+
+    Matrix4x4 move = HW_Transforms.TranslationMat(
+        displacement.x * translationTime,
+        displacement.y * translationTime,
+        displacement.z * translationTime
+    );
+
+    Matrix4x4 rotate = HW_Transforms.RotateMat(
+        rotationSpeed * rotationTime,
+        rotationAxis
+    );
+
+    for (int i = 0; i < meshs.Length; i++)
     {
-        for (int i = 0; i < meshs.Length; i++)
+        Matrix4x4 composite = move;
+
+        if (i > 0)
+            composite *= rotate; 
+
+        for (int j = 0; j < newVertices[i].Length; j++)
         {
-            Matrix4x4 move = HW_Transforms.TranslationMat(displacement.x * Time.time,
-                                                            displacement.y * Time.time,
-                                                            displacement.z * Time.time);
+            Vector4 temp = new Vector4(
+                baseVertices[i][j].x,
+                baseVertices[i][j].y,
+                baseVertices[i][j].z,
+                1
+            );
 
-            Matrix4x4 moveOrigin = HW_Transforms.TranslationMat(-displacement.x,
-                                                                -displacement.y,
-                                                                -displacement.z);
-
-            Matrix4x4 moveObject = HW_Transforms.TranslationMat(displacement.x,
-                                                                displacement.y,
-                                                                displacement.z);
-
-            Matrix4x4 rotate = HW_Transforms.RotateMat(rotationSpeed * Time.time, rotationAxis);
-
-            Matrix4x4 composite = move;
-            if (i > 0)
-                composite *= rotate;
-
-            for (int j = 0; j < newVertices[i].Length; j++)
-            {
-                Vector4 temp = new Vector4(baseVertices[i][j].x,
-                                            baseVertices[i][j].y,
-                                            baseVertices[i][j].z,
-                                            1);
-
-                newVertices[i][j] = composite * temp;
-
-            }
-            meshs[i].vertices = newVertices[i];
-            meshs[i].RecalculateNormals();
+            newVertices[i][j] = composite * temp;
         }
+
+        meshs[i].vertices = newVertices[i];
+        meshs[i].RecalculateNormals();
     }
+}
 }
